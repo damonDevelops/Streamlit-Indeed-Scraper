@@ -27,33 +27,8 @@ def search_jobs(driver, country, job_position, job_location, date_posted):
     driver.get(url)
     return url
 
-
-def log_page_content(driver, url):
-    driver.get(url)
-    driver.implicitly_wait(5)
-    with open('page_source.html', 'w', encoding='utf-8') as f:
-        f.write(driver.page_source)
-    print("Page source logged to 'page_source.html'.")
-
-def search_jobs(driver, country, job_position, job_location, date_posted):
-    full_url = f'{country}/jobs?q={"+".join(job_position.split())}&l={job_location}&fromage={date_posted}'
-    print("Search URL: " + full_url)
-    driver.get(full_url)
-    global total_jobs
-    try:
-        job_count_element = driver.find_element(
-            By.XPATH, '//div[starts-with(@class, "jobsearch-JobCountAndSortPane-jobCount")]')
-        total_jobs = job_count_element.find_element(By.XPATH, './span').text
-        print(f"{total_jobs} found")
-    except NoSuchElementException:
-        print("No job count found")
-        total_jobs = "Unknown"
-
-    driver.save_screenshot('screenshot.png')
-    return full_url
-
-def scrape_job_data(driver, country, max_jobs=50):
-    """Scrape job data with a limit on the number of jobs."""
+def scrape_job_data(driver, country, max_jobs):
+    """Scrape job data from the Indeed search results with a job limit."""
     df = pd.DataFrame(columns=['Link', 'Job Title', 'Company', 'Date Posted', 'Location'])
     job_count = 0
 
@@ -63,7 +38,7 @@ def scrape_job_data(driver, country, max_jobs=50):
 
         for box in boxes:
             if job_count >= max_jobs:
-                break  # Stop if max job limit is reached
+                break
 
             try:
                 # Extract job details
@@ -77,15 +52,10 @@ def scrape_job_data(driver, country, max_jobs=50):
                 company_tag = box.find('span', {'data-testid': 'company-name'})
                 company = company_tag.text.strip() if company_tag else 'N/A'
 
-                date_posted = (
-                    box.find('span', class_='date').text.strip()
-                    if box.find('span', class_='date') else 'N/A'
-                )
+                date_posted = box.find('span', class_='date').text.strip() if box.find('span', class_='date') else 'N/A'
+                location = box.find('div', {'data-testid': 'text-location'}).get_text(strip=True) if box.find('div', {'data-testid': 'text-location'}) else 'N/A'
 
-                location_element = box.find('div', {'data-testid': 'text-location'})
-                location = location_element.get_text(strip=True) if location_element else 'N/A'
-
-                # Create a new DataFrame row and append it
+                # Add data to DataFrame
                 new_data = pd.DataFrame({
                     'Link': [link_full], 'Job Title': [job_title],
                     'Company': [company], 'Date Posted': [date_posted],
@@ -100,120 +70,8 @@ def scrape_job_data(driver, country, max_jobs=50):
         # Handle pagination
         try:
             next_page = soup.find('a', {'aria-label': 'Next Page'})['href']
-            next_page_url = country + next_page
-            driver.get(next_page_url)
+            driver.get(country + next_page)
         except (AttributeError, TypeError):
-            break  # No more pages
+            break
 
     return df
-
-
-def clean_data(df):
-    def posted(x):
-        x = x.replace('PostedPosted', '').strip()
-        x = x.replace('EmployerActive', '').strip()
-        x = x.replace('PostedToday', '0').strip()
-        x = x.replace('PostedJust posted', '0').strip()
-        x = x.replace('today', '0').strip()
-        return x
-
-    def day(x):
-        return x.replace('days ago', '').strip().replace('day ago', '').strip()
-
-    def plus(x):
-        return x.replace('+', '').strip()
-
-    df['Date Posted'] = df['Date Posted'].apply(posted).apply(day).apply(plus)
-    return df
-
-def sort_data(df):
-    def convert_to_integer(x):
-        try:
-            return int(x)
-        except ValueError:
-            return float('inf')
-
-    df['Date_num'] = df['Date Posted'].apply(lambda x: x[:2].strip())
-    df['Date_num2'] = df['Date_num'].apply(convert_to_integer)
-    df.sort_values(by=['Date_num2'], inplace=True)
-    return df[['Link', 'Job Title', 'Company', 'Date Posted', 'Location']]
-
-
-def sort_data(df):
-    def convert_to_integer(x):
-        try:
-            return int(x)
-        except ValueError:
-            return float('inf')
-
-    df['Date_num'] = df['Date Posted'].apply(lambda x: x[:2].strip())
-    df['Date_num2'] = df['Date_num'].apply(convert_to_integer)
-    df.sort_values(by=['Date_num2'], inplace=True)
-    return df[['Link', 'Job Title', 'Company', 'Date Posted', 'Location']]
-
-def save_csv(df, job_position, job_location):
-    """Save the CSV in the same directory where the script is running."""
-    # Generate the filename using the job position and location
-    filename = f"{job_position}_{job_location}.csv".replace(" ", "_")
-
-    # Save the CSV in the current directory
-    file_path = os.path.join(os.getcwd(), filename)  # Use current working directory
-    df.to_csv(file_path, index=False)
-
-    print(f"CSV saved at {file_path}.")
-    return file_path
-
-def send_email(df, sender_email, receiver_email, job_position, job_location, password):
-    msg = MIMEMultipart()
-    msg['Subject'] = 'New Jobs from Indeed'
-    msg['From'] = sender_email
-    msg['To'] = ', '.join(receiver_email)
-
-    attachment_filename = f"{job_position}_{job_location}.csv"
-    csv_content = df.to_csv(index=False).encode()
-
-    part = MIMEBase('application', 'octet-stream')
-    part.set_payload(csv_content)
-    encoders.encode_base64(part)
-    part.add_header('Content-Disposition', f'attachment; filename="{attachment_filename}"')
-    msg.attach(part)
-
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-        server.login(sender_email, password)
-        server.sendmail(sender_email, receiver_email, msg.as_string())
-
-    print("Email sent successfully.")
-
-
-def send_email_empty(sender, receiver_email, subject, body, password):
-    msg = MIMEMultipart()
-    password = password
-
-    msg['Subject'] = subject
-    msg['From'] = sender
-    msg['To'] = ','.join(receiver_email)
-
-    # Attach the body as the text/plain part of the email
-    msg.attach(MIMEText(body, 'plain'))
-
-    s = smtplib.SMTP_SSL(host='smtp.gmail.com', port=465)
-    s.login(user=sender, password=password)
-
-    s.sendmail(sender, receiver_email, msg.as_string())
-
-    s.quit()
-
-
-def generate_attachment_filename(job_title, job_location):
-    filename = f"{job_title.replace(' ', '_')}_{job_location.replace(' ', '_')}.csv"
-    return filename
-
-def handle_csv(df, job_position, job_location, sender_email, receiver_email, password):
-    choice = input("Do you want to (1) Save locally or (2) Email the CSV? Enter 1 or 2: ").strip()
-    if choice == '1':
-        save_csv(df, job_position, job_location)
-    elif choice == '2':
-        send_email(df, sender_email, receiver_email, job_position, job_location, password)
-    else:
-        print("Invalid choice. Defaulting to saving locally.")
-        save_csv(df, job_position, job_location)
