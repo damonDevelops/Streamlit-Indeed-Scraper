@@ -48,7 +48,11 @@ This tool allows you to input your job search parameters and download the result
 def main():
     # User input form
     with st.form("job_search_form"):
-        country = st.selectbox("Select Country", options=list(COUNTRY_URLS.keys()))
+        country = st.selectbox(
+        "Select Country", 
+        options=list(COUNTRY_URLS.keys()), 
+        index=list(COUNTRY_URLS.keys()).index("Australia")
+    )
         job_position = st.text_input("Enter Job Title", value="Software Engineer")
         job_location = st.text_input("Enter Job Location", value="Sydney")
         date_posted = st.slider("Days Since Job Posted", min_value=1, max_value=30, value=7)
