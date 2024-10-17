@@ -1,45 +1,96 @@
-# Indeed Job Scraper
-This Python script allows you to scrape job data from Indeed for a specific job position and location. 
-It utilizes Selenium for web scraping and BeautifulSoup for parsing HTML content. The script supports multiple countries and is capable of sending job results via email in CSV format. Additionally, the script takes screenshots of the job search results.
 
+# 📈 Indeed Job Scraper Frontend
 
-### Prerequisites
-Before using the script, make sure you have the following installed:
+Welcome to the **Indeed Job Scraper Frontend**, a user-friendly Streamlit-based interface for customizing job searches on **Indeed**. This project allows you to easily configure job searches through a sleek UI and generate a downloadable Python script with all your search parameters to run the scraper locally on your machine.
 
-- [Python 3.x](https://www.python.org/downloads/)
-- [Chrome browser](https://www.google.com/chrome/)
-- [ChromeDriver](https://chromedriver.chromium.org/downloads)
+---
 
+## 📝 Features
 
-### Installation
-1. Ensure you have Python 3.x installed. Use the following command to install the required dependencies:
-2. Install dependencies:
-    ```bash
-    pip install -r requirements.txt
-This above command will install the requirements from the requirements.txt file
+- **Beautiful UI** powered by **Streamlit** to gather job search parameters.
+- **Country selection** with pre-defined Indeed URLs.
+- **Customizable job search options**, including:
+  - Job title
+  - Job location
+  - Days since posting
+  - Maximum number of jobs to scrape (up to 100)
+- **Downloadable Python script** to run the scraper locally on your machine.
+- Easy-to-use **CSV export option** from the frontend.
+- **Lightweight and easy setup** with no scraping done on the frontend.
 
-### Usage
-1. ```bash
-   git clone https://github.com/your-username/indeed-job-scraper.git
+---
 
-Go to the IndeedJobScraper directory by typing: cd IndeedJobScraper
-   
-2. Modify the script variables:
-- country: Set the desired country URL.
-- receiver_email: Provide the email address where job results should be sent.
-- job_position: Specify the job position you are looking for.
-- job_location: Specify the job location.
+## 📦 Installation
 
-3. Run the script:
+To run the **frontend** locally, follow these steps:
+
+1. **Clone the repository:**
+
    ```bash
-   python main.py
+   git clone https://github.com/damonDevelops/Streamlit-Indeed-Scraper.git
+   cd Streamlit-Indeed-Scraper
+   ```
 
-### Results
-The script will generate a CSV file with the job results, take screenshots of the job search results, and send the results to the specified email address.
-If no results are found, an email will be sent with suggestions for refining the search criteria. The email content is customized.
+2. **Create a virtual environment:**
 
-### Note: 
-The script uses a headless Chrome browser for web scraping, and it may be necessary to update the ChromeDriver version based on your Chrome browser version.
-Make sure to replace the placeholder email addresses and passwords in the script with your own credentials.
-To enable the send email feature, follow the instructions in this link: [How to Generate an App Password](https://support.google.com/mail/thread/205453566/how-to-generate-an-app-password?hl=en).
-Use this script responsibly.
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # For MacOS/Linux
+   .\venv\Scripts\activate   # For Windows
+   ```
+
+3. **Install the required dependencies:**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Run the Streamlit app:**
+
+   ```bash
+   streamlit run app.py
+   ```
+
+---
+
+## 🚀 Usage
+
+1. Open the Streamlit app in your browser (`http://localhost:8500`).
+2. Select your **country**, **job title**, **location**, and **days since posting**.
+3. Set the **maximum number of jobs to scrape** (default is 50, max 100).
+4. Click **Generate Script** to download a Python script with your search parameters.
+
+---
+
+## 🛠 Technologies Used
+
+- **Streamlit**: Frontend UI
+- **Python**: Core programming language
+- **Selenium**: Web scraping tool (for local script)
+- **BeautifulSoup**: HTML parsing (for local script)
+- **Pandas**: Data manipulation
+
+---
+
+## 🐛 Troubleshooting
+
+- If the scraper fails to run, ensure that **ChromeDriver** is installed correctly. 
+- Make sure all dependencies listed in `requirements.txt` are installed.
+
+---
+
+## 💡 Contributing
+
+Contributions are welcome! If you find any issues or want to improve the project, feel free to submit a pull request.
+
+---
+
+## 🙌 Acknowledgments
+
+Special thanks to **[@Eben001](https://github.com/Eben001/IndeedJobScraper)** for the inspiration behind this project.
+
+---
+
+## ☕ Support
+
+If you found this project helpful, consider **[buying me a coffee](https://buymeacoffee.com/damonDevelops)** to show your support!

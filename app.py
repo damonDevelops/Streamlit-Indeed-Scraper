@@ -46,38 +46,38 @@ This tool allows you to input your job search parameters and download the result
 """)
 
 def main():
+    st.markdown(
+        "This scraper runs **locally** on your machine. Use the interface below to input job search parameters."
+    )
+
     # User input form
     with st.form("job_search_form"):
-        country = st.selectbox("Select Country", options=list(COUNTRY_URLS.keys()), index=list(COUNTRY_URLS.keys()).index("Australia"))
+        country = st.selectbox("Select Country", options=list(COUNTRY_URLS.keys()), index=0)
         job_position = st.text_input("Enter Job Title", value="Software Engineer")
         job_location = st.text_input("Enter Job Location", value="Sydney")
         date_posted = st.slider("Days Since Job Posted", min_value=1, max_value=30, value=7)
+        max_jobs = st.slider("Max Jobs to Scrape", min_value=1, max_value=100, value=50)
 
-        # Slider to limit the number of jobs scraped (default 50, max 100)
-        max_jobs = st.slider("Max Number of Jobs to Scrape", min_value=10, max_value=100, value=50, step=10)
+        submit_button = st.form_submit_button("Start Scraping")
 
-        # Submit button
-        submitted = st.form_submit_button("Start Scraping")
-
-    if submitted:
+    if submit_button:
         country_url = COUNTRY_URLS[country]
-        st.info("Starting job scraping... Please wait.")
-        
-        # Configure and start the web driver
-        driver = configure_webdriver()
+
+        # Start scraping on the user's machine
+        st.info("Starting job scraping on your machine... Please wait.")
+        driver = configure_webdriver()  # This will run locally
 
         try:
-            # Scrape the job data
             full_url = search_jobs(driver, country_url, job_position, job_location, date_posted)
             df = scrape_job_data(driver, country_url, max_jobs)
 
             if df.empty:
                 st.warning("No jobs found for the given criteria.")
             else:
-                st.success(f"Successfully scraped {len(df)} jobs!")
-                st.dataframe(df)  # Display the scraped data
+                st.success(f"Scraped {len(df)} jobs successfully!")
+                st.dataframe(df)
 
-                # Offer CSV download option
+                # Provide CSV download link
                 csv = df.to_csv(index=False).encode('utf-8')
                 st.download_button(
                     label="Download CSV",
@@ -90,7 +90,7 @@ def main():
             st.error(f"An error occurred: {e}")
 
         finally:
-            driver.quit()  # Ensure the browser is closed
+            driver.quit()
 
 if __name__ == "__main__":
     main()
